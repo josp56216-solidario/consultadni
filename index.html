@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Búsqueda de Pacientes</title>
+    <title>Portal Clínico de Búsqueda</title>
     
-    <!-- Tailwind CSS para diseño elegante -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Librerías de Datos -->
@@ -15,22 +15,44 @@
     <!-- Iconos Lucide -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <script>
         tailwind.config = {
             theme: {
+                fontFamily: {
+                    sans: ['Inter', 'sans-serif'],
+                },
                 extend: {
                     colors: {
-                        turquesa: {
+                        brand: {
                             50: '#f0fdfa',
                             100: '#ccfbf1',
-                            500: '#14b8a6', // Teal
+                            500: '#14b8a6', // Teal principal
                             600: '#0d9488',
                             700: '#0f766e',
+                            dark: '#115e59',
                         },
-                        clinico: {
+                        accent: {
                             50: '#ecfdf5',
-                            500: '#10b981', // Emerald
+                            500: '#10b981', // Emerald acción
                             600: '#059669',
+                        }
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.5s ease-out',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-sm': 'bounceSmall 0.3s',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        bounceSmall: {
+                            '0%, 100%': { transform: 'scale(1)' },
+                            '50%': { transform: 'scale(1.1)' },
                         }
                     }
                 }
@@ -38,182 +60,221 @@
         }
     </script>
     <style>
-        /* Animación suave para el loader */
-        @keyframes pulse-ring {
-            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(20, 184, 166, 0); }
-            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(20, 184, 166, 0); }
+        body {
+            background-color: #f3f4f6;
+            background-image: radial-gradient(#14b8a6 0.5px, transparent 0.5px), radial-gradient(#14b8a6 0.5px, #f3f4f6 0.5px);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            background-attachment: fixed;
         }
-        .loading-pulse {
-            animation: pulse-ring 2s infinite;
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
         }
-        /* Estilo para el scrollbar de la lista de errores */
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #fef2f2; 
-            border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #fca5a5; 
-            border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #f87171; 
-        }
+
+        /* Scrollbars personalizados */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .card-stat { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .card-stat:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col">
+<body class="text-gray-800 font-sans min-h-screen flex flex-col overflow-x-hidden selection:bg-brand-100 selection:text-brand-700">
 
-    <!-- Header / Navbar -->
-    <nav class="bg-gradient-to-r from-turquesa-700 to-clinico-600 shadow-lg text-white">
-        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center">
-            <div class="flex items-center gap-3 mb-2 md:mb-0">
-                <i data-lucide="activity" class="w-8 h-8"></i>
-                <div>
-                    <h1 class="text-2xl font-bold tracking-tight">Portal de Pacientes</h1>
-                    <p class="text-xs text-turquesa-100 opacity-90">Gestión de Registros QR</p>
+    <!-- Navbar Flotante -->
+    <nav class="sticky top-0 z-40 w-full glass-panel border-b border-gray-200/50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center gap-3">
+                    <div class="bg-gradient-to-br from-brand-500 to-accent-500 p-2 rounded-lg shadow-md text-white">
+                        <i data-lucide="activity" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold tracking-tight text-gray-900 leading-tight">Portal Clínico</h1>
+                        <p class="text-[10px] font-semibold text-brand-600 uppercase tracking-wider">Gestión de Pacientes</p>
+                    </div>
                 </div>
-            </div>
-            <div id="connection-badge" class="flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full text-sm backdrop-blur-sm">
-                <div class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" id="status-dot"></div>
-                <span id="connection-text">Conectando a Base de Datos...</span>
+
+                <!-- Estado Conexión -->
+                <div id="connection-badge" class="flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-gray-100 border border-gray-200 transition-all duration-300">
+                    <div class="relative flex h-3 w-3">
+                        <span id="status-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                        <span id="status-dot" class="relative inline-flex rounded-full h-3 w-3 bg-yellow-500"></span>
+                    </div>
+                    <span id="connection-text" class="text-xs font-medium text-gray-600">Conectando...</span>
+                </div>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="flex-grow container max-w-5xl mx-auto px-4 py-8">
+    <!-- Contenido Principal -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            <!-- Columna Izquierda: Configuración e Instrucciones -->
-            <div class="lg:col-span-1 space-y-6">
-                <!-- Tarjeta de Configuración -->
-                <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-turquesa-500">
-                    <h2 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                        <i data-lucide="settings" class="w-5 h-5 text-turquesa-600"></i>
-                        Configuración
+            <!-- Panel Izquierdo: Configuración e Info (4 columnas) -->
+            <div class="lg:col-span-4 space-y-6 animate-fade-in-up" style="animation-delay: 0.1s;">
+                
+                <!-- Card Configuración -->
+                <div class="glass-panel rounded-2xl shadow-lg p-6 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <i data-lucide="settings" class="w-24 h-24 text-brand-500 transform rotate-12"></i>
+                    </div>
+                    
+                    <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <span class="bg-brand-100 p-1.5 rounded-md text-brand-600"><i data-lucide="database" class="w-5 h-5"></i></span>
+                        Fuente de Datos
                     </h2>
                     
-                    <div class="space-y-4">
+                    <div class="space-y-4 relative z-10">
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Columna de Identidad (DNI)</label>
-                            <div class="relative">
-                                <select id="dniColumnSelect" class="w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-2 focus:ring-turquesa-500 focus:border-turquesa-500 sm:text-sm rounded-md bg-gray-50 border transition-colors disabled:opacity-50" disabled>
-                                    <option>Cargando columnas...</option>
+                            <label class="block text-sm font-semibold text-gray-600 mb-2">Columna DNI / Identidad</label>
+                            <div class="relative group/select">
+                                <select id="dniColumnSelect" class="w-full pl-4 pr-10 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm appearance-none transition-shadow shadow-sm disabled:bg-gray-50 disabled:text-gray-400 cursor-pointer hover:border-brand-300" disabled>
+                                    <option>Esperando conexión...</option>
                                 </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 group-hover/select:text-brand-500 transition-colors">
                                     <i data-lucide="chevron-down" class="w-4 h-4"></i>
                                 </div>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1">Selecciona la columna que contiene el DNI en tu hoja de Google Sheets.</p>
+                            <p class="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                                <i data-lucide="info" class="w-3 h-3"></i> 
+                                Selecciona el encabezado que corresponde al ID.
+                            </p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Tarjeta de Ayuda -->
-                <div class="bg-turquesa-50 rounded-xl p-6 border border-turquesa-100">
-                    <h3 class="text-turquesa-800 font-semibold mb-2 flex items-center gap-2">
-                        <i data-lucide="info" class="w-4 h-4"></i> Instrucciones
-                    </h3>
-                    <ul class="text-sm text-turquesa-700 space-y-2 list-disc list-inside">
-                        <li>Espera a que la base de datos cargue (punto verde arriba).</li>
-                        <li>Pega tu lista de DNIs en el área de texto.</li>
-                        <li>El sistema filtrará automáticamente duplicados (1 fila por paciente).</li>
-                        <li>Se descargará un archivo Excel limpio.</li>
+                <!-- Card Instrucciones -->
+                <div class="glass-panel rounded-2xl shadow-sm border border-brand-100 p-6 bg-gradient-to-b from-white to-brand-50/50">
+                    <h3 class="text-sm font-bold text-gray-800 mb-3 uppercase tracking-wider text-brand-700">Guía Rápida</h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start gap-3 text-sm text-gray-600">
+                            <span class="flex-shrink-0 w-6 h-6 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center font-bold text-xs">1</span>
+                            <span>Espera el punto <span class="text-accent-600 font-bold">verde</span> de conexión.</span>
+                        </li>
+                        <li class="flex items-start gap-3 text-sm text-gray-600">
+                            <span class="flex-shrink-0 w-6 h-6 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center font-bold text-xs">2</span>
+                            <span>Pega la lista de documentos (Excel, Txt, etc.).</span>
+                        </li>
+                        <li class="flex items-start gap-3 text-sm text-gray-600">
+                            <span class="flex-shrink-0 w-6 h-6 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center font-bold text-xs">3</span>
+                            <span>El sistema limpiará duplicados automáticamente.</span>
+                        </li>
                     </ul>
                 </div>
             </div>
 
-            <!-- Columna Derecha: Entrada y Acción -->
-            <div class="lg:col-span-2">
-                <div class="bg-white rounded-xl shadow-lg p-6 h-full flex flex-col">
-                    <div class="flex justify-between items-end mb-2">
-                        <label class="block text-lg font-medium text-gray-700">
-                            Ingreso de Datos
-                        </label>
-                        <span class="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">Soporta 5000+ líneas</span>
+            <!-- Panel Derecho: Área de Trabajo (8 columnas) -->
+            <div class="lg:col-span-8 space-y-6 animate-fade-in-up" style="animation-delay: 0.2s;">
+                
+                <!-- Área de Input -->
+                <div class="glass-panel rounded-2xl shadow-xl p-1 flex flex-col h-[500px] transition-all focus-within:ring-4 focus-within:ring-brand-500/10">
+                    <div class="bg-white rounded-xl p-6 h-full flex flex-col">
+                        <div class="flex justify-between items-center mb-4">
+                            <label class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                <i data-lucide="file-input" class="w-5 h-5 text-gray-400"></i>
+                                Ingreso de Datos
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <button onclick="clearInput()" class="text-xs text-gray-400 hover:text-red-500 flex items-center gap-1 px-2 py-1 rounded hover:bg-red-50 transition-colors" title="Borrar todo">
+                                    <i data-lucide="trash-2" class="w-3 h-3"></i> Limpiar
+                                </button>
+                                <span class="bg-gray-100 text-gray-500 text-xs px-2.5 py-1 rounded-md font-medium">Soporta 5000+</span>
+                            </div>
+                        </div>
+                        
+                        <div class="relative flex-grow group">
+                            <textarea id="inputDNI" 
+                                class="w-full h-full p-4 bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl focus:bg-white focus:border-brand-500 focus:ring-0 resize-none font-mono text-sm text-gray-700 placeholder-gray-400 transition-all custom-scrollbar"
+                                placeholder="Pega aquí tu lista de DNIs...&#10;Por ejemplo:&#10;0801199912345&#10;0501198800000"></textarea>
+                            
+                            <!-- Botón Flotante de Acción -->
+                            <div class="absolute bottom-4 right-4 z-10">
+                                <button id="processBtn" onclick="processData()" disabled
+                                    class="flex items-center gap-2 bg-gradient-to-r from-accent-600 to-brand-600 hover:from-accent-500 hover:to-brand-500 text-white px-6 py-3 rounded-full shadow-lg shadow-brand-500/30 font-semibold transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none">
+                                    <span id="btn-icon"><i data-lucide="search" class="w-5 h-5"></i></span>
+                                    <span id="btn-text">Procesar Datos</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
+                </div>
+
+                <!-- SECCIÓN DE RESULTADOS -->
+                <!-- Oculto por defecto con opacity-0 y height-0 para animación -->
+                <div id="results-area" class="hidden opacity-0 transform translate-y-4 transition-all duration-700 ease-out">
                     
-                    <textarea id="inputDNI" 
-                        class="flex-grow w-full h-64 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-turquesa-500 focus:border-transparent resize-none font-mono text-sm bg-gray-50 transition-all mb-4 placeholder-gray-400"
-                        placeholder="Pega aquí los números de identidad...&#10;0801199012345&#10;0501198500000&#10;..."></textarea>
-
-                    <div class="mt-auto">
-                        <button id="processBtn" onclick="processData()" disabled
-                            class="w-full group relative flex justify-center py-4 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-clinico-600 hover:bg-clinico-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-clinico-500 disabled:bg-gray-300 disabled:cursor-not-allowed shadow-md transition-all transform hover:-translate-y-0.5">
-                            <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-                                <i data-lucide="search" class="w-5 h-5 text-clinico-200 group-hover:text-clinico-100"></i>
-                            </span>
-                            Procesar y Descargar Excel
-                        </button>
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="h-px bg-gray-300 flex-grow"></div>
+                        <span class="text-sm font-bold text-gray-400 uppercase tracking-widest">Resultados</span>
+                        <div class="h-px bg-gray-300 flex-grow"></div>
                     </div>
+
+                    <!-- Estadísticas Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+                        <!-- Total -->
+                        <div class="card-stat bg-white rounded-2xl p-5 shadow-sm border border-blue-100 relative overflow-hidden">
+                            <div class="absolute -right-4 -top-4 bg-blue-50 w-24 h-24 rounded-full opacity-50"></div>
+                            <p class="text-sm text-blue-600 font-semibold mb-1">Total Procesado</p>
+                            <h4 class="text-3xl font-bold text-gray-800" id="stat-total">0</h4>
+                            <i data-lucide="layers" class="absolute bottom-4 right-4 text-blue-200 w-8 h-8"></i>
+                        </div>
+
+                        <!-- Encontrados -->
+                        <div class="card-stat bg-white rounded-2xl p-5 shadow-sm border border-accent-100 relative overflow-hidden">
+                            <div class="absolute -right-4 -top-4 bg-accent-50 w-24 h-24 rounded-full opacity-50"></div>
+                            <p class="text-sm text-accent-600 font-semibold mb-1">Encontrados (Excel)</p>
+                            <h4 class="text-3xl font-bold text-gray-800" id="stat-found">0</h4>
+                            <i data-lucide="check-circle" class="absolute bottom-4 right-4 text-accent-200 w-8 h-8"></i>
+                        </div>
+
+                        <!-- No Encontrados -->
+                        <div class="card-stat bg-white rounded-2xl p-5 shadow-sm border border-red-100 relative overflow-hidden">
+                            <div class="absolute -right-4 -top-4 bg-red-50 w-24 h-24 rounded-full opacity-50"></div>
+                            <p class="text-sm text-red-600 font-semibold mb-1">No Encontrados</p>
+                            <h4 class="text-3xl font-bold text-gray-800" id="stat-missing">0</h4>
+                            <i data-lucide="alert-circle" class="absolute bottom-4 right-4 text-red-200 w-8 h-8"></i>
+                        </div>
+                    </div>
+
+                    <!-- Sección Missing (Interactive Grid) -->
+                    <div id="missing-section" class="hidden bg-white rounded-2xl shadow-sm border border-red-100 overflow-hidden">
+                        <div class="bg-red-50/50 px-6 py-4 border-b border-red-100 flex justify-between items-center">
+                            <div class="flex items-center gap-2 text-red-700">
+                                <i data-lucide="file-warning" class="w-5 h-5"></i>
+                                <span class="font-bold text-sm">Registros no encontrados</span>
+                            </div>
+                            <button onclick="copyAllMissing()" class="group flex items-center gap-2 bg-white text-red-600 px-4 py-2 rounded-lg border border-red-200 hover:bg-red-600 hover:text-white transition-all text-xs font-bold shadow-sm">
+                                <i data-lucide="copy-all" class="w-4 h-4 group-hover:scale-110 transition-transform"></i> 
+                                COPIAR TODOS
+                            </button>
+                        </div>
+                        
+                        <div class="p-6 bg-gradient-to-b from-white to-red-50/20">
+                            <div id="missing-cards-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                                <!-- Cards generadas por JS -->
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
-
-        <!-- Área de Resultados (Oculta inicialmente) -->
-        <div id="results-area" class="hidden mt-8 transition-all duration-500 ease-in-out opacity-0 translate-y-4">
-            <h3 class="text-xl font-bold text-gray-700 mb-4 flex items-center gap-2">
-                <i data-lucide="clipboard-check" class="text-turquesa-600"></i> Resumen de la Operación
-            </h3>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <!-- Stat 1 -->
-                <div class="bg-white p-5 rounded-lg shadow border-l-4 border-blue-500">
-                    <div class="text-gray-500 text-sm">DNIs Ingresados (Únicos)</div>
-                    <div class="text-2xl font-bold text-gray-800" id="stat-total">0</div>
-                </div>
-                <!-- Stat 2 -->
-                <div class="bg-white p-5 rounded-lg shadow border-l-4 border-clinico-500">
-                    <div class="text-gray-500 text-sm">Pacientes Encontrados</div>
-                    <div class="text-2xl font-bold text-clinico-600" id="stat-found">0</div>
-                    <div class="text-xs text-green-600 mt-1">Exportados a Excel</div>
-                </div>
-                <!-- Stat 3 -->
-                <div class="bg-white p-5 rounded-lg shadow border-l-4 border-red-400">
-                    <div class="text-gray-500 text-sm">No Encontrados</div>
-                    <div class="text-2xl font-bold text-red-500" id="stat-missing">0</div>
-                </div>
-            </div>
-
-            <!-- SECCION NUEVA: LISTA DE NO ENCONTRADOS -->
-            <div id="missing-section" class="mt-6 bg-red-50 rounded-lg p-4 border border-red-200 hidden">
-                <div class="flex justify-between items-center mb-4">
-                    <h4 class="text-red-800 font-semibold text-sm flex items-center gap-2">
-                        <i data-lucide="alert-circle" class="w-4 h-4"></i>
-                        DNIs No Encontrados (<span id="missing-count-header">0</span>)
-                    </h4>
-                    <button onclick="copyAllMissing()" class="text-xs flex items-center gap-1 bg-white border border-red-200 text-red-600 px-3 py-1.5 rounded hover:bg-red-100 transition-colors shadow-sm font-medium">
-                        <i data-lucide="copy" class="w-3 h-3"></i> Copiar Lista Completa
-                    </button>
-                </div>
-                
-                <p class="text-xs text-red-500 mb-3">Los siguientes números no existen en la base de datos:</p>
-                
-                <!-- Contenedor de Tarjetas (Grid) -->
-                <div id="missing-cards-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-                    <!-- Las tarjetas se generan aquí con JS -->
-                </div>
-            </div>
-
-        </div>
-
     </main>
 
-    <footer class="bg-white border-t border-gray-200 mt-8 py-6">
-        <div class="max-w-6xl mx-auto px-4 text-center text-gray-400 text-sm">
-            <p>&copy; 2024 Sistema de Gestión Clínica. Datos sincronizados con Google Sheets.</p>
-        </div>
+    <footer class="mt-auto py-6 text-center text-gray-400 text-sm font-medium">
+        <p>Sistema Clínico Seguro &copy; 2024</p>
     </footer>
 
-    <!-- Notificaciones Toast (Re-agregado para corregir error) -->
-    <div id="toast" class="fixed bottom-5 right-5 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-xl transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-3 z-50">
-        <span id="toast-icon"></span>
-        <span id="toast-message">Mensaje</span>
-    </div>
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
     <script>
         // Inicializar Iconos
@@ -224,24 +285,24 @@
         let dbData = [];
         let headers = [];
 
-        // Elementos UI
+        // Referencias DOM
         const statusDot = document.getElementById('status-dot');
+        const statusPing = document.getElementById('status-ping');
         const statusText = document.getElementById('connection-text');
         const connBadge = document.getElementById('connection-badge');
         const select = document.getElementById('dniColumnSelect');
         const processBtn = document.getElementById('processBtn');
-        const resultsArea = document.getElementById('results-area');
+        const inputDNI = document.getElementById('inputDNI');
         
-        // Elementos Sección Missing
+        // Areas Resultados
+        const resultsArea = document.getElementById('results-area');
         const missingSection = document.getElementById('missing-section');
         const missingContainer = document.getElementById('missing-cards-container');
-        const missingCountEl = document.getElementById('missing-count-header');
 
-        let lastMissingDNIs = []; // Variable global para guardar la lista de no encontrados
+        let lastMissingDNIs = [];
 
-        // Cargar Datos al inicio
+        // 1. CARGA DE DATOS
         window.onload = function() {
-            console.log("Iniciando descarga de datos...");
             Papa.parse(SHEET_URL, {
                 download: true,
                 header: true,
@@ -251,47 +312,46 @@
                     headers = results.meta.fields;
                     
                     if (dbData.length > 0) {
-                        updateStatus(true);
-                        populateColumnSelector();
-                        showToast('success', `Base de datos cargada: ${dbData.length} registros.`);
+                        setOnlineStatus(true, dbData.length);
+                        populateSelect();
                     } else {
-                        updateStatus(false);
-                        showToast('error', 'La hoja está vacía.');
+                        setOnlineStatus(false);
+                        showToast('error', 'La base de datos está vacía');
                     }
                 },
                 error: function(err) {
-                    updateStatus(false);
-                    console.error(err);
-                    showToast('error', 'Error conectando con Google Sheets.');
+                    setOnlineStatus(false);
+                    showToast('error', 'Error de conexión');
                 }
             });
         };
 
-        function updateStatus(isOnline) {
+        function setOnlineStatus(isOnline, count = 0) {
             if (isOnline) {
-                statusDot.classList.remove('bg-yellow-400', 'animate-pulse');
-                statusDot.classList.add('bg-green-400');
-                statusText.innerText = "Base de Datos Conectada";
-                connBadge.classList.add('bg-green-500/20');
+                statusDot.className = "relative inline-flex rounded-full h-3 w-3 bg-green-500";
+                statusPing.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75";
+                statusText.innerHTML = `Conectado <span class="text-green-600 ml-1 font-bold">(${count.toLocaleString()})</span>`;
+                connBadge.className = "flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-green-50 border border-green-200 shadow-sm";
                 processBtn.disabled = false;
                 select.disabled = false;
             } else {
-                statusDot.classList.remove('bg-green-400');
-                statusDot.classList.add('bg-red-500');
-                statusText.innerText = "Error de Conexión";
+                statusDot.className = "relative inline-flex rounded-full h-3 w-3 bg-red-500";
+                statusPing.className = "hidden";
+                statusText.innerText = "Desconectado";
+                connBadge.className = "flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-red-50 border border-red-200";
+                select.innerHTML = '<option>Error de conexión</option>';
             }
         }
 
-        function populateColumnSelector() {
+        function populateSelect() {
             select.innerHTML = '';
             let found = false;
             headers.forEach(header => {
                 const option = document.createElement('option');
                 option.value = header;
                 option.text = header;
-                
-                // Algoritmo simple para detectar la columna DNI
                 const lower = header.toLowerCase();
+                // Detección inteligente de columna
                 if (!found && (lower.includes('dni') || lower.includes('identidad') || lower.includes('cedula') || lower.includes('id'))) {
                     option.selected = true;
                     found = true;
@@ -300,185 +360,201 @@
             });
         }
 
-        function processData() {
-            const inputRaw = document.getElementById('inputDNI').value;
-            const dniColumn = select.value;
+        function clearInput() {
+            inputDNI.value = '';
+            inputDNI.focus();
+            // Ocultar resultados si se limpia
+            resultsArea.classList.add('opacity-0', 'hidden');
+        }
 
-            if (!inputRaw.trim()) {
-                showToast('warning', 'Por favor ingresa al menos un DNI.');
+        // 2. PROCESAMIENTO
+        function processData() {
+            const raw = inputDNI.value;
+            const col = select.value;
+
+            if (!raw.trim()) {
+                inputDNI.focus();
+                inputDNI.classList.add('ring-2', 'ring-red-300');
+                setTimeout(() => inputDNI.classList.remove('ring-2', 'ring-red-300'), 1000);
+                showToast('info', 'Ingresa al menos un número para buscar');
                 return;
             }
 
-            // Feedback de carga
-            const originalBtnText = processBtn.innerHTML;
-            processBtn.innerHTML = `<i data-lucide="loader-2" class="animate-spin w-5 h-5 mr-2 inline"></i> Procesando...`;
+            // UI Loading State
+            const btnText = document.getElementById('btn-text');
+            const btnIcon = document.getElementById('btn-icon');
+            const originalText = btnText.innerText;
+            const originalIcon = btnIcon.innerHTML;
+
+            btnText.innerText = "Analizando...";
+            btnIcon.innerHTML = `<i data-lucide="loader-2" class="animate-spin w-5 h-5"></i>`;
             processBtn.disabled = true;
             lucide.createIcons();
 
-            // Usar setTimeout para no bloquear el renderizado UI
             setTimeout(() => {
                 try {
-                    // 1. Limpieza de input (Set para búsquedas únicas O(1))
-                    const searchDNIs = inputRaw.split(/[\n,;\t]+/).map(s => s.trim()).filter(s => s !== "");
-                    const uniqueSearchSet = new Set(searchDNIs); // Lista de búsqueda única
+                    // Lógica Core
+                    const searchList = raw.split(/[\n,;\t]+/).map(s => s.trim()).filter(s => s !== "");
+                    const uniqueSearch = new Set(searchList);
+                    const resultsMap = new Map();
 
-                    const resultsMap = new Map(); // Mapa para guardar resultados únicos (DNI -> Fila)
-                    
-                    // 2. Búsqueda Optimizada (Recorrido lineal sobre DB)
+                    // Búsqueda Lineal Optimizada
                     for (let i = 0; i < dbData.length; i++) {
                         const row = dbData[i];
-                        const rowDNI = String(row[dniColumn] || "").trim();
-
-                        // ¿Este DNI de la DB está en mi lista de búsqueda?
-                        if (uniqueSearchSet.has(rowDNI)) {
-                            // ¿Ya agregué a este paciente a mis resultados?
-                            if (!resultsMap.has(rowDNI)) {
-                                resultsMap.set(rowDNI, row);
-                            }
+                        const val = String(row[col] || "").trim();
+                        if (uniqueSearch.has(val) && !resultsMap.has(val)) {
+                            resultsMap.set(val, row);
                         }
                     }
 
-                    const finalResults = Array.from(resultsMap.values());
+                    const foundItems = Array.from(resultsMap.values());
                     
-                    // CALCULAR NO ENCONTRADOS
-                    const missingDNIs = [];
-                    uniqueSearchSet.forEach(dni => {
-                        if (!resultsMap.has(dni)) {
-                            missingDNIs.push(dni);
-                        }
+                    // Calcular Missing
+                    const missingItems = [];
+                    uniqueSearch.forEach(id => {
+                        if (!resultsMap.has(id)) missingItems.push(id);
                     });
+                    lastMissingDNIs = missingItems;
 
-                    // Guardar en variable global para uso posterior (copiar todo)
-                    lastMissingDNIs = missingDNIs;
-
-                    // 3. Exportar Excel
-                    if (finalResults.length > 0) {
-                        const ws = XLSX.utils.json_to_sheet(finalResults, { header: headers });
+                    // Generar Excel
+                    if (foundItems.length > 0) {
+                        const ws = XLSX.utils.json_to_sheet(foundItems, { header: headers });
                         const wb = XLSX.utils.book_new();
-                        XLSX.utils.book_append_sheet(wb, ws, "Resultados Pacientes");
-                        
-                        const dateStr = new Date().toISOString().slice(0,10);
-                        XLSX.writeFile(wb, `Reporte_Pacientes_${dateStr}.xlsx`);
-                        
-                        showToast('success', 'Archivo Excel generado exitosamente.');
+                        XLSX.utils.book_append_sheet(wb, ws, "Pacientes");
+                        const fName = `Reporte_Clinico_${new Date().toISOString().slice(0,10)}.xlsx`;
+                        XLSX.writeFile(wb, fName);
+                        showToast('success', `Excel descargado: ${foundItems.length} pacientes`);
                     } else {
-                        showToast('warning', 'No se encontraron coincidencias.');
+                        showToast('warning', 'No se encontraron coincidencias');
                     }
 
-                    // 4. Mostrar Estadísticas
-                    document.getElementById('stat-total').innerText = uniqueSearchSet.size;
-                    document.getElementById('stat-found').innerText = finalResults.length;
-                    document.getElementById('stat-missing').innerText = missingDNIs.length;
+                    // Renderizar UI Resultados
+                    renderStats(uniqueSearch.size, foundItems.length, missingItems.length);
+                    renderMissing(missingItems);
 
-                    // 5. Mostrar Lista de Faltantes (Tarjetas)
-                    if (missingDNIs.length > 0) {
-                        missingSection.classList.remove('hidden');
-                        missingContainer.innerHTML = ''; // Limpiar contenedor anterior
-
-                        missingDNIs.forEach(dni => {
-                            // Crear tarjeta HTML
-                            const card = document.createElement('div');
-                            card.className = "flex justify-between items-center bg-white border border-red-100 rounded-md p-2 shadow-sm hover:shadow-md transition-shadow group";
-                            card.innerHTML = `
-                                <span class="font-mono text-xs font-semibold text-red-600 truncate mr-2" title="${dni}">${dni}</span>
-                                <button onclick="copySingle('${dni}')" class="text-gray-300 hover:text-turquesa-600 hover:bg-turquesa-50 p-1.5 rounded transition-all transform hover:scale-110" title="Copiar DNI">
-                                    <i data-lucide="copy" class="w-3 h-3"></i>
-                                </button>
-                            `;
-                            missingContainer.appendChild(card);
-                        });
-
-                        missingCountEl.innerText = missingDNIs.length;
-                    } else {
-                        missingSection.classList.add('hidden');
-                    }
-
+                    // Mostrar Área (Animación)
                     resultsArea.classList.remove('hidden');
-                    // Pequeño hack para animar la entrada
-                    setTimeout(() => {
-                        resultsArea.classList.remove('opacity-0', 'translate-y-4');
-                    }, 10);
-                    
-                    // Re-inicializar iconos para la nueva sección
-                    lucide.createIcons();
+                    // Force reflow
+                    void resultsArea.offsetWidth; 
+                    resultsArea.classList.remove('opacity-0', 'translate-y-4');
+
+                    // Scroll suave hacia resultados
+                    resultsArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
                 } catch (e) {
                     console.error(e);
-                    showToast('error', 'Ocurrió un error al procesar los datos.');
+                    showToast('error', 'Error interno al procesar');
                 } finally {
                     // Restaurar botón
-                    processBtn.innerHTML = originalBtnText;
+                    btnText.innerText = originalText;
+                    btnIcon.innerHTML = originalIcon;
                     processBtn.disabled = false;
                     lucide.createIcons();
                 }
-            }, 500); // Retardo intencional para ver la animación de carga
+            }, 600); // Pequeño delay para UX
         }
 
-        // Función para copiar un solo DNI
-        function copySingle(dni) {
-            navigator.clipboard.writeText(dni).then(() => {
-                showToast('info', `DNI ${dni} copiado.`);
-            }).catch(err => {
-                // Fallback antiguo si falla clipboard API
-                const tempInput = document.createElement("input");
-                tempInput.value = dni;
-                document.body.appendChild(tempInput);
-                tempInput.select();
-                document.execCommand("copy");
-                document.body.removeChild(tempInput);
-                showToast('info', `DNI ${dni} copiado.`);
-            });
+        function renderStats(total, found, missing) {
+            animateValue("stat-total", parseInt(document.getElementById("stat-total").innerText), total, 1000);
+            animateValue("stat-found", parseInt(document.getElementById("stat-found").innerText), found, 1000);
+            animateValue("stat-missing", parseInt(document.getElementById("stat-missing").innerText), missing, 1000);
         }
 
-        // Función para copiar TODA la lista de no encontrados
-        function copyAllMissing() {
-            if (lastMissingDNIs.length === 0) return;
-            
-            const textToCopy = lastMissingDNIs.join('\n');
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                showToast('info', 'Lista completa copiada al portapapeles.');
-            }).catch(err => {
-                 // Fallback antiguo
-                const tempTextArea = document.createElement("textarea");
-                tempTextArea.value = textToCopy;
-                document.body.appendChild(tempTextArea);
-                tempTextArea.select();
-                document.execCommand("copy");
-                document.body.removeChild(tempTextArea);
-                showToast('info', 'Lista completa copiada al portapapeles.');
-            });
-        }
-
-        // Función para mostrar notificaciones flotantes (Toast)
-        function showToast(type, msg) {
-            const toast = document.getElementById('toast');
-            const iconSpan = document.getElementById('toast-icon');
-            const msgSpan = document.getElementById('toast-message');
-            
-            if(!toast) return; // Protección adicional
-
-            // Colores e iconos según tipo
-            if(type === 'success') {
-                toast.className = "fixed bottom-5 right-5 bg-clinico-600 text-white px-6 py-3 rounded-lg shadow-xl transform transition-all duration-300 flex items-center gap-3 z-50";
-                iconSpan.innerHTML = '<i data-lucide="check-circle" class="w-5 h-5"></i>';
-            } else if (type === 'error') {
-                toast.className = "fixed bottom-5 right-5 bg-red-600 text-white px-6 py-3 rounded-lg shadow-xl transform transition-all duration-300 flex items-center gap-3 z-50";
-                iconSpan.innerHTML = '<i data-lucide="alert-triangle" class="w-5 h-5"></i>';
-            } else {
-                toast.className = "fixed bottom-5 right-5 bg-yellow-600 text-white px-6 py-3 rounded-lg shadow-xl transform transition-all duration-300 flex items-center gap-3 z-50";
-                iconSpan.innerHTML = '<i data-lucide="info" class="w-5 h-5"></i>';
+        function renderMissing(items) {
+            if (items.length === 0) {
+                missingSection.classList.add('hidden');
+                return;
             }
             
-            msgSpan.innerText = msg;
+            missingSection.classList.remove('hidden');
+            missingContainer.innerHTML = '';
+
+            items.forEach(dni => {
+                const btn = document.createElement('button');
+                btn.className = "group relative flex items-center justify-between px-3 py-2 bg-white border border-red-200 rounded-lg hover:border-red-400 hover:shadow-md transition-all text-left";
+                btn.onclick = () => copyToClipboard(dni, btn);
+                btn.innerHTML = `
+                    <span class="font-mono text-xs font-bold text-gray-600 group-hover:text-red-600 truncate mr-2">${dni}</span>
+                    <i data-lucide="copy" class="w-3 h-3 text-gray-300 group-hover:text-red-500 transition-colors"></i>
+                `;
+                missingContainer.appendChild(btn);
+            });
+            lucide.createIcons();
+        }
+
+        // 3. UTILIDADES & UI
+        
+        // Animación de números
+        function animateValue(id, start, end, duration) {
+            if (start === end) return;
+            const obj = document.getElementById(id);
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        function copyToClipboard(text, btnElement = null) {
+            navigator.clipboard.writeText(text).then(() => {
+                if (btnElement) {
+                    // Animación visual en el botón pequeño
+                    const originalHTML = btnElement.innerHTML;
+                    btnElement.classList.add('bg-green-50', 'border-green-300');
+                    btnElement.innerHTML = `<span class="font-mono text-xs font-bold text-green-700">Copiado!</span><i data-lucide="check" class="w-3 h-3 text-green-600"></i>`;
+                    lucide.createIcons();
+                    setTimeout(() => {
+                        btnElement.innerHTML = originalHTML;
+                        btnElement.classList.remove('bg-green-50', 'border-green-300');
+                        lucide.createIcons();
+                    }, 1500);
+                } else {
+                    showToast('success', 'Texto copiado al portapapeles');
+                }
+            });
+        }
+
+        function copyAllMissing() {
+            if (lastMissingDNIs.length === 0) return;
+            copyToClipboard(lastMissingDNIs.join('\n'));
+            showToast('success', 'Lista completa copiada');
+        }
+
+        function showToast(type, message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = "pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl transform transition-all duration-300 translate-x-full opacity-0 max-w-sm";
+            
+            // Estilos según tipo
+            if (type === 'success') {
+                toast.classList.add('bg-gray-800', 'text-white', 'border-l-4', 'border-green-500');
+                toast.innerHTML = `<i data-lucide="check-circle" class="text-green-400 w-5 h-5"></i> <span class="text-sm font-medium">${message}</span>`;
+            } else if (type === 'error') {
+                toast.classList.add('bg-white', 'text-red-600', 'border', 'border-red-100');
+                toast.innerHTML = `<i data-lucide="alert-octagon" class="w-5 h-5"></i> <span class="text-sm font-medium">${message}</span>`;
+            } else {
+                toast.classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-200');
+                toast.innerHTML = `<i data-lucide="info" class="text-brand-500 w-5 h-5"></i> <span class="text-sm font-medium">${message}</span>`;
+            }
+
+            container.appendChild(toast);
             lucide.createIcons();
 
-            // Mostrar
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            
-            // Ocultar después de 3 seg
+            // Animar entrada
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-x-full', 'opacity-0');
+            });
+
+            // Eliminar después de 3s
             setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 4000);
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
         }
     </script>
 </body>
